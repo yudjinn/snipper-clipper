@@ -1,14 +1,16 @@
+use uuid::Uuid;
 use serde_json::{Serialize,Deserialize};
+use anyhow::Error;
 
 enum Language {
-	Go = "Go",
-	Rust = "Rust",
-	Python = "Python",
-	C = "C",
-	Bash = "Bash",
-	Cpp = "C++",
-	Java = "Java",
-	Miscellaneous = "Misc"
+	Go,
+	Rust,
+	Python,
+	C,
+	Bash,
+	Cpp,
+	Java,
+	Miscellaneous
 }
 
 impl FromStr for Language {
@@ -29,14 +31,14 @@ impl FromStr for Language {
 }
 
 enum Storage {
-	JSON(path: PathSpec),
+	JSON{path: PathSpec},
 	DB(DBConnection),
 	SSH(SSHConnection)
 }
 
 #[derive(Serialize, Deserialize)]
 struct Config {
-	storage: &impl Persist,
+	storage: Storage,
 	theme: String,
 }
 
@@ -95,7 +97,7 @@ impl Snippets {
 		todo!()
 	}
 	
-	fn get(id: uuid) -> Option<&Snippet> {
+	fn get(s: &str) -> Option<&Snippet> {
 		// get snippet by id
 		todo!()
 	}
@@ -105,7 +107,7 @@ impl Snippets {
 		todo!()
 	}
 	
-	fn list_all() -> &Vec<Snippet> {
+	fn list_all(&self) -> &Vec<Snippet> {
 		//show all
 		return &self.snippets;
 	}
@@ -113,7 +115,7 @@ impl Snippets {
 
 #[derive(Serialize, Deserialize)]
 struct Snippet {
-	id: uuid,
+	id: Uuid,
 	name: String,
 	folder: String,
 	body: String,
@@ -123,7 +125,7 @@ struct Snippet {
 impl Snippet {
 	fn default() -> Self {
 		Self {
-			id: uuid::new(),
+			id: Uuid::new_v4(),
 			name: String::from("New Snippet"),
 			folder: String::new(),
 			body: String::from("Lorem Ipsum"),
@@ -132,9 +134,9 @@ impl Snippet {
 	}
 	
 	pub fn from_string(full_name: &str, body: &str) -> Self {
-		let (folder, name, language) = self.parse_name(full_name);
+		let (folder, name, language) = Snippet::parse_name(full_name);
 		Self {
-			id: uuid::new(),
+			id: Uuid::new_v4(),
 			name,
 			folder,
 			body,
@@ -142,7 +144,7 @@ impl Snippet {
 		}
 	}
 	
-	fn parse_name(raw: &str) -> (&str, &str, Language) {
+	pub fn parse_name(raw: &str) -> (&str, &str, Language) {
 		let mut folder = String::new();
 		let mut name = String::new();
 		let mut lang = Language::Miscellaneous;
